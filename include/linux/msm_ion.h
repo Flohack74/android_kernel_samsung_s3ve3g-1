@@ -5,7 +5,8 @@
 
 enum msm_ion_heap_types {
 	ION_HEAP_TYPE_MSM_START = ION_HEAP_TYPE_CUSTOM + 1,
-	ION_HEAP_TYPE_DMA = ION_HEAP_TYPE_MSM_START,
+	ION_HEAP_TYPE_IOMMUCA = ION_HEAP_TYPE_MSM_START,
+	ION_HEAP_TYPE_DMA,
 	ION_HEAP_TYPE_CP,
 	ION_HEAP_TYPE_SECURE_DMA,
 	ION_HEAP_TYPE_REMOVED,
@@ -30,6 +31,7 @@ enum ion_heap_ids {
 	ION_CP_MFC_HEAP_ID = 12,
 	ION_CP_WB_HEAP_ID = 16, /* 8660 only */
 	ION_CAMERA_HEAP_ID = 20, /* 8660 only */
+	ION_IOMMUCA_HEAP_ID = ION_CAMERA_HEAP_ID,
 	ION_SYSTEM_CONTIG_HEAP_ID = 21,
 	ION_ADSP_HEAP_ID = 22,
 	ION_PIL1_HEAP_ID = 23, /* Currently used for other PIL images */
@@ -107,6 +109,7 @@ enum cp_mem_usage {
 #define ION_MM_HEAP_NAME	"mm"
 #define ION_CAMERA_HEAP_NAME	"camera_preview"
 #define ION_IOMMU_HEAP_NAME	"iommu"
+#define ION_IOMMUCA_HEAP_NAME	"iommuca"
 #define ION_MFC_HEAP_NAME	"mfc"
 #define ION_WB_HEAP_NAME	"wb"
 #define ION_MM_FIRMWARE_HEAP_NAME	"mm_fw"
@@ -195,6 +198,14 @@ struct ion_co_heap_pdata {
 	int (*release_region)(void *);
 	void *(*setup_region)(void);
 	enum ion_memory_types memory_type;
+};
+
+/*
+ * struct ion_cma_pdata - extra data for CMA regions
+ * @default_prefetch_size - default size to use for prefetching
+ */
+struct ion_cma_pdata {
+	unsigned long default_prefetch_size;
 };
 
 #ifdef CONFIG_ION
@@ -504,6 +515,27 @@ struct ion_flush_data {
 	unsigned int length;
 };
 
+struct ion_prefetch_data {
+       int heap_id;
+       unsigned long len;
+};
+
+#ifdef CONFIG_MACH_KLTE_JPN
+/* struct ion_buffer_data
+ *
+ * @handle:	handle for the buffer being queried
+ * @paddr:	The physical address of the buffer referenced by the handle
+ * @length:	The length of the buffer referenced by the handle
+ *
+ * Gets the physicial address of the given handle
+ */
+struct ion_buffer_data {
+	struct ion_handle *handle;
+	unsigned long paddr;
+	unsigned int length;
+};
+#endif
+
 #define ION_IOC_MSM_MAGIC 'M'
 
 /**
@@ -528,4 +560,20 @@ struct ion_flush_data {
 #define ION_IOC_CLEAN_INV_CACHES	_IOWR(ION_IOC_MSM_MAGIC, 2, \
 						struct ion_flush_data)
 
+#define ION_IOC_PREFETCH               _IOWR(ION_IOC_MSM_MAGIC, 3, \
+                                               struct ion_prefetch_data)
+
+#define ION_IOC_DRAIN                  _IOWR(ION_IOC_MSM_MAGIC, 4, \
+                                               struct ion_prefetch_data)
+
+#ifdef CONFIG_MACH_KLTE_JPN
+/**
+ * DOC: ION_IOC_GET_PHYS - get the physical address of the handle
+ *
+ * Gets the physicial address of the given handle
+ */
+#define ION_IOC_GET_PHYS	_IOWR(ION_IOC_MSM_MAGIC, 5, \
+									struct ion_buffer_data)
+
+#endif
 #endif
