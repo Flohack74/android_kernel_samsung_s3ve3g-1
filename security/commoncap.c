@@ -528,7 +528,7 @@ skip:
 	if ((new->euid != old->uid ||
 	     new->egid != old->gid ||
 	     !cap_issubset(new->cap_permitted, old->cap_permitted)) &&
-	    bprm->unsafe & ~LSM_UNSAFE_PTRACE_CAP) {
+	    bprm->unsafe & LSM_UNSAFE_NO_NEW_PRIVS) {
 		/* downgrade; they get no more than they had, and maybe less */
 		if (!capable(CAP_SETUID)) {
 			new->euid = new->uid;
